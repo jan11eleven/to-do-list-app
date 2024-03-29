@@ -14,10 +14,15 @@ const authOptions = {
     }),
   ],
   secret: (process.env.NEXTAUTH_SECRET as string) || '',
-  //   session: {
-  //     jwt: true,
-  //     maxAge: 60 * 60, // Adjust maxAge as needed (in seconds)
-  //   },
+  // session: {
+  //   jwt: true,
+  //   maxAge: 60 * 60, // Adjust maxAge as needed (in seconds)
+  // },\
+  jwt: {
+    // The maximum age of the NextAuth.js issued JWT in seconds.
+    // Defaults to `session.maxAge`.
+    maxAge: 60 * 60 * 24,
+  },
 };
 
 export default authOptions;
