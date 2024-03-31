@@ -2,12 +2,78 @@
 
 import MainPage from '@/my_components/MainPage';
 import { useSession } from 'next-auth/react';
+import { useEffect, useState } from 'react';
+import debounce from './utils/debounce';
+import errorMessages from './utils/errorMessages.json';
 
 export default function Home() {
   const { data: session } = useSession();
-  console.log(session);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  fetch('/user/api');
+  console.log(session?.user);
+  useEffect(() => {
+    let isMounted: boolean = true;
+
+    if (isLoggedIn) return;
+
+    const fetchUserData = async () => {
+      try {
+        if (!session || !session?.user) return;
+
+        const rawResponse = await fetch(
+          `user/api?email=${session?.user?.email}`
+        );
+
+        if (!rawResponse.ok) {
+          throw new Error('Encountered an error');
+        }
+
+        const userData = await rawResponse.json();
+
+        // create user if user is not logged in
+        if (userData.message == errorMessages['user.no_user_found']) {
+          const payload = {
+            name: session?.user?.name,
+            email: session?.user?.email,
+            image: session?.user?.image,
+          };
+
+          if (!session || !session?.user) return;
+
+          const rawResponse = await fetch(`user/api`, {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+          });
+
+          const createdUserData = await rawResponse.json();
+
+          console.log(createdUserData);
+        }
+
+        setIsLoggedIn(true);
+        console.log(userData);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    // Debounce the fetchUserData function with a delay of 300 milliseconds
+    const debouncedFetchUserData = isMounted
+      ? debounce(fetchUserData, 300)
+      : null;
+
+    if (debouncedFetchUserData) {
+      debouncedFetchUserData();
+    }
+
+    return () => {
+      isMounted = false; // Cleanup function to prevent state updates on unmounted component
+    };
+  }, [session]);
 
   return (
     <main>

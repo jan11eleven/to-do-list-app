@@ -23,13 +23,17 @@ export async function getUserDetailsRepo(
   }
 }
 
-export async function createUserRepo() {
+export async function createUserRepo(
+  name: string,
+  email: string,
+  image: string
+) {
   try {
     const userCreated = await prisma.user.create({
       data: {
-        name: 'Jan Eleven Salvador',
-        email: '2.janelevensalvador@gmail.com',
-        image: '123123',
+        name,
+        email,
+        image,
       },
     });
 
