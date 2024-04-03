@@ -10,7 +10,6 @@ export default function Home() {
   const { data: session } = useSession();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  console.log(session?.user);
   useEffect(() => {
     let isMounted: boolean = true;
 
@@ -50,12 +49,9 @@ export default function Home() {
           });
 
           const createdUserData = await rawResponse.json();
-
-          console.log(createdUserData);
         }
 
         setIsLoggedIn(true);
-        console.log(userData);
       } catch (error) {
         console.error(error);
       }
