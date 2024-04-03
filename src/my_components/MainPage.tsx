@@ -37,6 +37,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { format } from 'date-fns';
+import { useToast } from '@/components/ui/use-toast';
 
 type Todo = {
   id: string;
@@ -72,6 +73,8 @@ export default function MainPage({ fullName }: { fullName: string }) {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const { toast } = useToast();
+  const [isAddTodoLoading, setIsAddTodoLoading] = useState(false);
 
   // add form
   const form = useForm<z.infer<typeof todoSchema>>({
@@ -98,9 +101,9 @@ export default function MainPage({ fullName }: { fullName: string }) {
   function onSubmit(values: z.infer<typeof todoSchema>) {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
-
     const parseResult = todoSchema.safeParse(values);
 
+    setIsAddTodoLoading(true);
     if (!parseResult.success) {
       console.log(parseResult);
       console.log('Invalid Input!');
@@ -108,6 +111,7 @@ export default function MainPage({ fullName }: { fullName: string }) {
     }
 
     const postTodo = async () => {
+      console.log('before', form.formState.isSubmitting);
       const rawResponse = await fetch(
         `todos/api?email=${session?.user?.email}`,
         {
@@ -131,6 +135,15 @@ export default function MainPage({ fullName }: { fullName: string }) {
 
     postTodo().then((data) => {
       fetchAllTodos();
+
+      toast({
+        title: 'Todo successfully added!',
+        description: `You have new todo - ${data.name}`,
+        variant: 'success',
+      });
+
+      console.log('after', form.formState.isSubmitting);
+      setIsAddTodoLoading(false);
     });
 
     console.log(values);
@@ -195,7 +208,14 @@ export default function MainPage({ fullName }: { fullName: string }) {
                   )}
                 />
                 <DialogFooter>
-                  <Button type="submit">Add</Button>
+                  {isAddTodoLoading ? (
+                    <Button disabled>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Please wait
+                    </Button>
+                  ) : (
+                    <Button type="submit">Add</Button>
+                  )}
                 </DialogFooter>
               </form>
             </DialogContent>
@@ -227,7 +247,20 @@ export default function MainPage({ fullName }: { fullName: string }) {
                   <Button className="mr-2" variant={'secondary'}>
                     Edit
                   </Button>
-                  <Button variant={'destructive'}>Delete</Button>
+                  <Button
+                    variant={'destructive'}
+                    onClick={() => {
+                      toast({
+                        title: 'Scheduled: Catch up',
+                        description: 'Friday, February 10, 2023 at 5:57 PM',
+                        variant: 'success',
+                      });
+
+                      console.log(1);
+                    }}
+                  >
+                    Delete
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
