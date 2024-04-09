@@ -1,5 +1,6 @@
 import createTodoAction from '@/app/actions/createTodoAction';
 import getAllTodosAction from '@/app/actions/getAllTodosAction';
+import deleteTodoAction from '@/app/actions/deleteTodoAction';
 import { NextRequest } from 'next/server';
 
 export async function GET(req: NextRequest) {
@@ -63,4 +64,23 @@ export async function POST(req: NextRequest) {
       status: 201,
     });
   } catch (error) {}
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const parsedBody = await req.json();
+
+    const todoId = parsedBody.id;
+
+    const deletedTodo = await deleteTodoAction(todoId);
+
+    return new Response(JSON.stringify(deletedTodo), {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      status: 200,
+    });
+  } catch (error: any) {
+    throw new Error(error);
+  }
 }

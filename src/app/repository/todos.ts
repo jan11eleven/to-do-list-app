@@ -32,3 +32,13 @@ export async function createTodoRepo(
     throw new Error('Error in creating a todo', error);
   }
 }
+
+export async function deleteTodoRepo(id: string) {
+  try {
+    const deletedTodo = await prisma.todos.delete({ where: { id: id } });
+
+    return deletedTodo;
+  } catch (error: any) {
+    throw new Error('Error in deleting todo: ', error);
+  }
+}

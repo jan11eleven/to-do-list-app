@@ -9,6 +9,7 @@ import errorMessages from './utils/errorMessages.json';
 export default function Home() {
   const { data: session } = useSession();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     let isMounted: boolean = true;
@@ -17,6 +18,8 @@ export default function Home() {
 
     const fetchUserData = async () => {
       try {
+        setIsLoading(true);
+
         if (!session || !session?.user) return;
 
         const rawResponse = await fetch(
@@ -52,8 +55,11 @@ export default function Home() {
         }
 
         setIsLoggedIn(true);
+        setIsLoading(false);
       } catch (error) {
         console.error(error);
+
+        setIsLoading(false);
       }
     };
 
@@ -70,6 +76,10 @@ export default function Home() {
       isMounted = false; // Cleanup function to prevent state updates on unmounted component
     };
   }, [session]);
+
+  if (isLoading) {
+    return <div>Validating session...</div>;
+  }
 
   return (
     <main>

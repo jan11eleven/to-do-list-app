@@ -11,6 +11,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { AtSign, Github } from 'lucide-react';
 
 export default function NavigationBar() {
   const { data: session } = useSession();
@@ -25,10 +37,10 @@ export default function NavigationBar() {
 
   return (
     <main className="w-screen flex justify-between items-center px-6 h-16 bg-slate-100">
-      <h1>To-Do List</h1>
+      <h1 className="font-bold">To-Do List</h1>
       <ul className="flex">
         {session ? (
-          <li className="mr-10">
+          <li className="">
             <DropdownMenu>
               <DropdownMenuTrigger>
                 <Avatar>
@@ -54,7 +66,43 @@ export default function NavigationBar() {
           </li>
         ) : (
           <li className="mr-10">
-            <Button onClick={handleSignInButton}>Sign In</Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                {/* <Button onClick={handleSignInButton}>Sign In</Button> */}
+                <Button>Sign In</Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Sign In</DialogTitle>
+                  <DialogDescription>
+                    Sign in using Github or Google account.
+                  </DialogDescription>
+                </DialogHeader>
+                <Button
+                  onClick={() => {
+                    signIn('github');
+                  }}
+                  className="flex h-14"
+                >
+                  <div>
+                    <Github />{' '}
+                  </div>
+                  <p className="flex-1 text-lg">Sign in with Github</p>
+                </Button>
+                <Button
+                  onClick={() => {
+                    signIn('google');
+                  }}
+                  variant={'outline'}
+                  className="flex h-14"
+                >
+                  <div className="">
+                    <AtSign className="" />
+                  </div>
+                  <p className="flex-1 text-lg">Sign in with Google</p>
+                </Button>
+              </DialogContent>
+            </Dialog>
           </li>
         )}
       </ul>
