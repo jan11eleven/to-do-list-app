@@ -77,13 +77,14 @@ export default function MainPage({ fullName }: { fullName: string }) {
   const { toast } = useToast();
   const [isAddTodoLoading, setIsAddTodoLoading] = useState(false);
   const [deleteTodoData, setDeleteTodoData] = useState<Todo>();
+  const [editTodoData, setEditTodoData] = useState<Todo>();
 
   // add form
   const form = useForm<z.infer<typeof todoSchema>>({
     resolver: zodResolver(todoSchema),
     defaultValues: {
-      name: '',
-      description: '',
+      name: editTodoData ? editTodoData.name : '',
+      description: editTodoData ? editTodoData.description : '',
     },
   });
 
@@ -115,68 +116,75 @@ export default function MainPage({ fullName }: { fullName: string }) {
     }
 
     const postTodo = async () => {
-      console.log('before', form.formState.isSubmitting);
-      const rawResponse = await fetch(
-        `todos/api?email=${session?.user?.email}`,
-        {
-          method: 'POST',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(values),
+      try {
+        const rawResponse = await fetch(
+          `todos/api?email=${session?.user?.email}`,
+          {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(values),
+          }
+        );
+
+        if (!rawResponse.ok) {
+          throw new Error('Error in fetching Todos API');
         }
-      );
 
-      if (!rawResponse.ok) {
-        throw new Error('Error in fetching Todos API');
+        const createdTodo = await rawResponse.json();
+
+        fetchAllTodos();
+
+        toast({
+          title: 'Todo successfully added!',
+          description: `You have new todo - ${createdTodo.name}`,
+          variant: 'success',
+        });
+
+        setIsAddTodoLoading(false);
+        form.reset();
+      } catch (error: any) {
+        throw new Error(error);
       }
-
-      const createdTodo = await rawResponse.json();
-
-      return createdTodo;
     };
 
-    postTodo().then((data) => {
-      fetchAllTodos();
-
-      toast({
-        title: 'Todo successfully added!',
-        description: `You have new todo - ${data.name}`,
-        variant: 'success',
-      });
-
-      console.log('after', form.formState.isSubmitting);
-      setIsAddTodoLoading(false);
-    });
-
-    console.log(values);
+    postTodo();
   }
 
   // delete todo handler
   function handleDeleteTodo(id: string) {
     const callDeleteTodo = async () => {
-      const rawResponse = await fetch(
-        `todos/api?email=${session?.user?.email}`,
-        {
-          method: 'DELETE',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ id: id }),
+      try {
+        const rawResponse = await fetch(
+          `todos/api?email=${session?.user?.email}`,
+          {
+            method: 'DELETE',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ id: id }),
+          }
+        );
+
+        if (!rawResponse.ok) {
+          throw new Error('Error in calling DELETE Todo API');
         }
-      );
 
-      if (!rawResponse.ok) {
-        throw new Error('Error in calling DELETE Todo API');
+        const deletedTodo = await rawResponse.json();
+
+        fetchAllTodos();
+
+        toast({
+          title: 'Todo successfully deleted!',
+          description: `Deleted todo - ${deletedTodo.name}`,
+          variant: 'destructive',
+        });
+      } catch (error: any) {
+        throw new Error(error);
       }
-
-      const deletedTodo = await rawResponse.json();
-
-      fetchAllTodos();
-
-      console.log('deleted todo: ', deletedTodo);
     };
 
     callDeleteTodo();
@@ -193,9 +201,15 @@ export default function MainPage({ fullName }: { fullName: string }) {
       {/* Todo Add Modal */}
       <div className="mb-10">
         <Form {...form}>
+          {/* Start Add Todo Dialog */}
           <Dialog>
             <DialogTrigger asChild>
-              <Button>
+              <Button
+                onClick={() => {
+                  form.setValue('name', '');
+                  form.setValue('description', '');
+                }}
+              >
                 <ClipboardPlus className="mr-2 h-4 w-4" /> Add Todo
               </Button>
             </DialogTrigger>
@@ -253,66 +267,138 @@ export default function MainPage({ fullName }: { fullName: string }) {
               </form>
             </DialogContent>
           </Dialog>
+          {/* End Add Todo Dialog */}
         </Form>
       </div>
       {/* Todos Table */}
       <div>
         <h1 className="text-3xl font-bold">My Todo's</h1>
-        <Dialog>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>
-                Delete Todo: <span>{deleteTodoData?.name}</span>
-              </DialogTitle>
-              <DialogDescription>
-                Are you sure you want to delete?
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="sm:justify-between">
-              <DialogClose asChild>
-                <Button type="button" variant="secondary">
-                  Close
-                </Button>
-              </DialogClose>
-              <DialogClose asChild>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={() => {
-                    handleDeleteTodo(deleteTodoData?.id || '');
-                  }}
-                >
-                  Delete
-                </Button>
-              </DialogClose>
-            </DialogFooter>
-          </DialogContent>
-          {/* starts table */}
-          <Table>
-            <TableCaption>A list of your todos.</TableCaption>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="">Name</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Date Created</TableHead>
-                <TableHead className="text-right">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {todos.map((todo) => (
-                <TableRow key={todo.id}>
-                  <TableCell className="font-medium">{todo.name}</TableCell>
-                  <TableCell>{todo.description}</TableCell>
-                  <TableCell>{todo.status}</TableCell>
-                  <TableCell>
-                    {format(todo.createdAt, 'MMM-dd-yyyy p')}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button className="mr-2" variant={'secondary'}>
-                      Edit
-                    </Button>
 
+        {/* starts table */}
+        <Table>
+          <TableCaption>A list of your todos.</TableCaption>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="">Name</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Date Created</TableHead>
+              <TableHead className="text-right">Action</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {todos.map((todo) => (
+              <TableRow key={todo.id}>
+                <TableCell className="font-medium">{todo.name}</TableCell>
+                <TableCell>{todo.description}</TableCell>
+                <TableCell>{todo.status}</TableCell>
+                <TableCell>{format(todo.createdAt, 'MMM-dd-yyyy p')}</TableCell>
+                <TableCell className="text-right flex justify-end">
+                  {/* Start Edit Dialog */}
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)}>
+                      <Dialog>
+                        <DialogContent className="sm:max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>Edit Todo</DialogTitle>
+                          </DialogHeader>
+                          <FormField
+                            control={form.control}
+                            name="name"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Name</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="description"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Description</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <DialogFooter className="sm:justify-between">
+                            <DialogClose asChild>
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                onClick={() => {
+                                  form.setValue('name', '');
+                                  form.setValue('description', '');
+                                }}
+                              >
+                                Close
+                              </Button>
+                            </DialogClose>
+                            <DialogClose asChild>
+                              <Button
+                                type="button"
+                                onClick={() => {
+                                  handleDeleteTodo(deleteTodoData?.id || '');
+                                }}
+                              >
+                                Save
+                              </Button>
+                            </DialogClose>
+                          </DialogFooter>
+                        </DialogContent>
+                        <DialogTrigger asChild>
+                          <Button
+                            className="mr-2"
+                            variant={'secondary'}
+                            onClick={() => {
+                              form.setValue('name', todo.name);
+                              form.setValue('description', todo.description);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                        </DialogTrigger>
+                      </Dialog>
+                    </form>
+                  </Form>
+                  {/* End Delete Dialog */}
+                  {/* Start Delete Todo Dialog */}
+                  <Dialog>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>
+                          Delete Todo: <span>{deleteTodoData?.name}</span>
+                        </DialogTitle>
+                        <DialogDescription>
+                          Are you sure you want to delete?
+                        </DialogDescription>
+                      </DialogHeader>
+                      <DialogFooter className="sm:justify-between">
+                        <DialogClose asChild>
+                          <Button type="button" variant="secondary">
+                            Close
+                          </Button>
+                        </DialogClose>
+                        <DialogClose asChild>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            onClick={() => {
+                              handleDeleteTodo(deleteTodoData?.id || '');
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </DialogClose>
+                      </DialogFooter>
+                    </DialogContent>
                     <DialogTrigger asChild>
                       <Button
                         variant={'destructive'}
@@ -323,12 +409,13 @@ export default function MainPage({ fullName }: { fullName: string }) {
                         Delete
                       </Button>
                     </DialogTrigger>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Dialog>
+                  </Dialog>
+                  {/* End Delete Todo Dialog */}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
     </main>
   );
