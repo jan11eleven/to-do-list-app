@@ -20,7 +20,10 @@ export default function Home() {
       try {
         setIsLoading(true);
 
-        if (!session || !session?.user) return;
+        if (!session || !session?.user) {
+          setIsLoading(false);
+          return;
+        }
 
         const rawResponse = await fetch(
           `user/api?email=${session?.user?.email}`

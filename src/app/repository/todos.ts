@@ -1,4 +1,10 @@
 import prisma from '../db/prismaClient';
+import TodoType from '../types/TodoType';
+
+enum TaskStatuses {
+  Ongoing,
+  Done,
+}
 
 export async function getAllTodosRepo(email: string) {
   try {
@@ -35,10 +41,25 @@ export async function createTodoRepo(
 
 export async function deleteTodoRepo(id: string) {
   try {
-    const deletedTodo = await prisma.todos.delete({ where: { id: id } });
+    const deleteTodo = await prisma.todos.delete({ where: { id: id } });
 
-    return deletedTodo;
+    return deleteTodo;
   } catch (error: any) {
     throw new Error('Error in deleting todo: ', error);
+  }
+}
+
+export async function updateTodoRepo(taskData: TodoType) {
+  try {
+    const updateTodo = await prisma.todos.update({
+      where: {
+        id: taskData.id,
+      },
+      data: taskData,
+    });
+
+    return updateTodo;
+  } catch (error: any) {
+    throw new Error('Error in updating todo: ', error);
   }
 }

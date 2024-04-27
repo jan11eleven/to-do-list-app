@@ -1,16 +1,13 @@
 import createTodoAction from '@/app/actions/createTodoAction';
 import getAllTodosAction from '@/app/actions/getAllTodosAction';
 import deleteTodoAction from '@/app/actions/deleteTodoAction';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import editTodoAction from '@/app/actions/editTodoAction';
 
 export async function GET(req: NextRequest) {
   try {
-    const fullUrl = req.url;
-
-    // Parse the query parameters using URLSearchParams
-    const queryParams = new URLSearchParams(fullUrl.split('?')[1]);
-
-    const emailParam = queryParams.get('email');
+    const url = new URL(req.url);
+    const emailParam = url.searchParams.get('email');
 
     if (!emailParam) {
       return new Response(
@@ -34,12 +31,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const fullUrl = req.url;
+    const url = new URL(req.url);
 
-    // Parse the query parameters using URLSearchParams
-    const queryParams = new URLSearchParams(fullUrl.split('?')[1]);
-
-    const emailParam = queryParams.get('email');
+    const emailParam = url.searchParams.get('email');
 
     if (!emailParam) {
       return new Response(
@@ -75,6 +69,26 @@ export async function DELETE(req: NextRequest) {
     const deletedTodo = await deleteTodoAction(todoId);
 
     return new Response(JSON.stringify(deletedTodo), {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      status: 200,
+    });
+  } catch (error: any) {
+    throw new Error(error);
+  }
+}
+
+export async function PUT(req: NextRequest) {
+  try {
+    const parsedBody = await req.json();
+    const url = new URL(req.url);
+
+    const emailParam = url.searchParams.get('email');
+
+    const updateTodo = await editTodoAction(parsedBody);
+
+    return new Response(JSON.stringify(updateTodo), {
       headers: {
         'Content-Type': 'application/json',
       },

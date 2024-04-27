@@ -26,7 +26,6 @@ import { Loader2, ClipboardPlus } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { todoNameRegex, todoDescriptionRegex } from '@/app/utils/regex';
 import { useForm } from 'react-hook-form';
 import {
   Form,
@@ -39,6 +38,7 @@ import {
 } from '@/components/ui/form';
 import { format } from 'date-fns';
 import { useToast } from '@/components/ui/use-toast';
+import { addTodoSchema, editTodoSchema } from '@/app/utils/zodSchemas';
 
 type Todo = {
   id: string;
@@ -46,72 +46,89 @@ type Todo = {
   description: string;
   status: string;
   createdAt: Date;
+  updatedAt: Date;
+  userId: string;
 };
-
-// zodSchema
-const todoSchema = z.object({
-  name: z
-    .string()
-    .max(255)
-    .min(1, { message: 'Name is required!' })
-    .regex(todoNameRegex, {
-      message: 'Only special characters allowed - -/.,%|()[]',
-    })
-    .trim(),
-  description: z
-    .string()
-    .max(255)
-    .min(1, { message: 'Description is required!' })
-    .regex(todoDescriptionRegex, {
-      message: 'Only special characters allowed:  -/.,%|()[] ',
-    })
-    .trim(),
-});
 
 export default function MainPage({ fullName }: { fullName: string }) {
   // set session/states
   const { data: session } = useSession();
   const [todos, setTodos] = useState<Todo[]>([]);
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
   const { toast } = useToast();
   const [isAddTodoLoading, setIsAddTodoLoading] = useState(false);
   const [deleteTodoData, setDeleteTodoData] = useState<Todo>();
-  const [editTodoData, setEditTodoData] = useState<Todo>();
+
+  // edit form
+  const editTodoForm = useForm<z.infer<typeof editTodoSchema>>({
+    resolver: zodResolver(editTodoSchema),
+  });
+
+  async function editTodoOnSubmit(values: z.infer<typeof editTodoSchema>) {
+    const parseResult = editTodoSchema.safeParse(values);
+
+    if (!parseResult.success) {
+      toast({
+        title: 'Invalid Input!',
+        description: `Please fix the error.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const callUpdateTodo = async () => {
+      try {
+        const rawResponse = await fetch(`todos/api?email=${values.userId}`, {
+          method: 'PUT',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(values),
+        });
+
+        if (!rawResponse.ok) {
+          throw new Error('Error in editing Todos API');
+        }
+
+        const updatedTodo = await rawResponse.json();
+
+        fetchAllTodos();
+
+        toast({
+          title: 'Todo have successfully updated!',
+          description: `You have new todo - ${updatedTodo.name}`,
+          variant: 'success',
+        });
+      } catch (error: any) {
+        throw new Error(error);
+      }
+    };
+
+    await callUpdateTodo();
+  }
 
   // add form
-  const form = useForm<z.infer<typeof todoSchema>>({
-    resolver: zodResolver(todoSchema),
+  const addTodoForm = useForm<z.infer<typeof addTodoSchema>>({
+    resolver: zodResolver(addTodoSchema),
     defaultValues: {
-      name: editTodoData ? editTodoData.name : '',
-      description: editTodoData ? editTodoData.description : '',
+      name: '',
+      description: '',
     },
   });
 
-  // function for getting all todos
-  const fetchAllTodos = async () => {
-    const rawResponse = await fetch(`todos/api?email=${session?.user?.email}`);
-
-    if (!rawResponse.ok) {
-      throw new Error('Error in fetching Todos API');
-    }
-
-    const todosData = await rawResponse.json();
-
-    console.log(todosData);
-    setTodos(todosData);
-  };
-
   // Add Todo onsubmit
-  function onSubmit(values: z.infer<typeof todoSchema>) {
+  async function addTodoOnSubmit(values: z.infer<typeof addTodoSchema>) {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
-    const parseResult = todoSchema.safeParse(values);
+    const parseResult = addTodoSchema.safeParse(values);
 
     setIsAddTodoLoading(true);
     if (!parseResult.success) {
-      console.log(parseResult);
-      console.log('Invalid Input!');
+      toast({
+        title: 'Invalid Input!',
+        description: `Please fix the error.`,
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -138,23 +155,36 @@ export default function MainPage({ fullName }: { fullName: string }) {
         fetchAllTodos();
 
         toast({
-          title: 'Todo successfully added!',
+          title: 'Successfully added new Todo!',
           description: `You have new todo - ${createdTodo.name}`,
           variant: 'success',
         });
 
         setIsAddTodoLoading(false);
-        form.reset();
+        addTodoForm.reset();
       } catch (error: any) {
         throw new Error(error);
       }
     };
 
-    postTodo();
+    await postTodo();
   }
 
+  // function for getting all todos
+  const fetchAllTodos = async () => {
+    const rawResponse = await fetch(`todos/api?email=${session?.user?.email}`);
+
+    if (!rawResponse.ok) {
+      throw new Error('Error in fetching Todos API');
+    }
+
+    const todosData = await rawResponse.json();
+
+    setTodos(todosData);
+  };
+
   // delete todo handler
-  function handleDeleteTodo(id: string) {
+  async function handleDeleteTodo(id: string) {
     const callDeleteTodo = async () => {
       try {
         const rawResponse = await fetch(
@@ -187,7 +217,7 @@ export default function MainPage({ fullName }: { fullName: string }) {
       }
     };
 
-    callDeleteTodo();
+    await callDeleteTodo();
   }
 
   // fetch all todos when mounted
@@ -200,15 +230,16 @@ export default function MainPage({ fullName }: { fullName: string }) {
       <p className="mb-10 font-semibold">Welcome, {fullName}</p>
       {/* Todo Add Modal */}
       <div className="mb-10">
-        <Form {...form}>
+        <Form {...addTodoForm}>
           {/* Start Add Todo Dialog */}
           <Dialog>
             <DialogTrigger asChild>
               <Button
                 onClick={() => {
-                  form.setValue('name', '');
-                  form.setValue('description', '');
+                  addTodoForm.setValue('name', '');
+                  addTodoForm.setValue('description', '');
                 }}
+                disabled={todos.length < 10 ? false : true}
               >
                 <ClipboardPlus className="mr-2 h-4 w-4" /> Add Todo
               </Button>
@@ -221,11 +252,11 @@ export default function MainPage({ fullName }: { fullName: string }) {
                 </DialogDescription>
               </DialogHeader>
               <form
-                onSubmit={form.handleSubmit(onSubmit)}
+                onSubmit={addTodoForm.handleSubmit(addTodoOnSubmit)}
                 className="space-y-8"
               >
                 <FormField
-                  control={form.control}
+                  control={addTodoForm.control}
                   name="name"
                   render={({ field }) => (
                     <FormItem>
@@ -238,7 +269,7 @@ export default function MainPage({ fullName }: { fullName: string }) {
                   )}
                 />
                 <FormField
-                  control={form.control}
+                  control={addTodoForm.control}
                   name="description"
                   render={({ field }) => (
                     <FormItem>
@@ -254,6 +285,14 @@ export default function MainPage({ fullName }: { fullName: string }) {
                     </FormItem>
                   )}
                 />
+                {todos.length < 10 ? (
+                  ''
+                ) : (
+                  <DialogDescription className="italic">
+                    Todo max limit reached. Delete some of your todo to create
+                    another.
+                  </DialogDescription>
+                )}
                 <DialogFooter>
                   {isAddTodoLoading ? (
                     <Button disabled>
@@ -261,7 +300,12 @@ export default function MainPage({ fullName }: { fullName: string }) {
                       Please wait
                     </Button>
                   ) : (
-                    <Button type="submit">Add</Button>
+                    <Button
+                      type="submit"
+                      disabled={todos.length < 10 ? false : true}
+                    >
+                      Add
+                    </Button>
                   )}
                 </DialogFooter>
               </form>
@@ -292,18 +336,22 @@ export default function MainPage({ fullName }: { fullName: string }) {
                 <TableCell className="font-medium">{todo.name}</TableCell>
                 <TableCell>{todo.description}</TableCell>
                 <TableCell>{todo.status}</TableCell>
-                <TableCell>{format(todo.createdAt, 'MMM-dd-yyyy p')}</TableCell>
+                <TableCell>
+                  {format(todo.createdAt, 'MMM dd, yyyy - p')}
+                </TableCell>
                 <TableCell className="text-right flex justify-end">
                   {/* Start Edit Dialog */}
-                  <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)}>
-                      <Dialog>
-                        <DialogContent className="sm:max-w-md">
-                          <DialogHeader>
-                            <DialogTitle>Edit Todo</DialogTitle>
-                          </DialogHeader>
+                  <Form {...editTodoForm}>
+                    <Dialog>
+                      <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Edit Todo</DialogTitle>
+                        </DialogHeader>
+                        <form
+                          onSubmit={editTodoForm.handleSubmit(editTodoOnSubmit)}
+                        >
                           <FormField
-                            control={form.control}
+                            control={editTodoForm.control}
                             name="name"
                             render={({ field }) => (
                               <FormItem>
@@ -316,7 +364,7 @@ export default function MainPage({ fullName }: { fullName: string }) {
                             )}
                           />
                           <FormField
-                            control={form.control}
+                            control={editTodoForm.control}
                             name="description"
                             render={({ field }) => (
                               <FormItem>
@@ -328,47 +376,40 @@ export default function MainPage({ fullName }: { fullName: string }) {
                               </FormItem>
                             )}
                           />
-                          <DialogFooter className="sm:justify-between">
+                          <DialogFooter className="sm:justify-between mt-10">
                             <DialogClose asChild>
-                              <Button
-                                type="button"
-                                variant="secondary"
-                                onClick={() => {
-                                  form.setValue('name', '');
-                                  form.setValue('description', '');
-                                }}
-                              >
-                                Close
-                              </Button>
+                              <Button variant="secondary">Close</Button>
                             </DialogClose>
                             <DialogClose asChild>
-                              <Button
-                                type="button"
-                                onClick={() => {
-                                  handleDeleteTodo(deleteTodoData?.id || '');
-                                }}
-                              >
-                                Save
-                              </Button>
+                              <Button type="submit">Save</Button>
                             </DialogClose>
                           </DialogFooter>
-                        </DialogContent>
-                        <DialogTrigger asChild>
-                          <Button
-                            className="mr-2"
-                            variant={'secondary'}
-                            onClick={() => {
-                              form.setValue('name', todo.name);
-                              form.setValue('description', todo.description);
-                            }}
-                          >
-                            Edit
-                          </Button>
-                        </DialogTrigger>
-                      </Dialog>
-                    </form>
+                        </form>
+                      </DialogContent>
+                      <DialogTrigger asChild>
+                        <Button
+                          className="mr-2"
+                          variant={'secondary'}
+                          onClick={() => {
+                            editTodoForm.setValue('id', todo.id);
+                            editTodoForm.setValue('name', todo.name);
+                            editTodoForm.setValue(
+                              'description',
+                              todo.description
+                            );
+                            editTodoForm.setValue('status', todo.status);
+                            editTodoForm.setValue('createdAt', todo.createdAt);
+                            editTodoForm.setValue('userId', todo.userId);
+                            editTodoForm.setValue('updatedAt', todo.updatedAt);
+                            console.log(editTodoForm.getValues());
+                          }}
+                        >
+                          Edit
+                        </Button>
+                      </DialogTrigger>
+                    </Dialog>
                   </Form>
-                  {/* End Delete Dialog */}
+                  {/* End Edit Dialog */}
                   {/* Start Delete Todo Dialog */}
                   <Dialog>
                     <DialogContent className="sm:max-w-md">
