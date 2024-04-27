@@ -20,4 +20,16 @@ model User {
   image     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  todos     Todos[]
+}
+
+model Todos {
+  id          String   @id @unique @default(uuid())
+  name        String
+  description String
+  status      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [email])
+  userId      String
 }

@@ -9,8 +9,8 @@ import errorMessages from './utils/errorMessages.json';
 export default function Home() {
   const { data: session } = useSession();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  console.log(session?.user);
   useEffect(() => {
     let isMounted: boolean = true;
 
@@ -18,7 +18,12 @@ export default function Home() {
 
     const fetchUserData = async () => {
       try {
-        if (!session || !session?.user) return;
+        setIsLoading(true);
+
+        if (!session || !session?.user) {
+          setIsLoading(false);
+          return;
+        }
 
         const rawResponse = await fetch(
           `user/api?email=${session?.user?.email}`
@@ -50,14 +55,14 @@ export default function Home() {
           });
 
           const createdUserData = await rawResponse.json();
-
-          console.log(createdUserData);
         }
 
         setIsLoggedIn(true);
-        console.log(userData);
+        setIsLoading(false);
       } catch (error) {
         console.error(error);
+
+        setIsLoading(false);
       }
     };
 
@@ -74,6 +79,10 @@ export default function Home() {
       isMounted = false; // Cleanup function to prevent state updates on unmounted component
     };
   }, [session]);
+
+  if (isLoading) {
+    return <div>Validating session...</div>;
+  }
 
   return (
     <main>
