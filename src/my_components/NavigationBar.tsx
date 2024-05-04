@@ -71,7 +71,7 @@ export default function NavigationBar() {
             </DropdownMenu>
           </li>
         ) : (
-          <li className="mr-10">
+          <li className="">
             <Dialog>
               <DialogTrigger asChild>
                 {/* <Button onClick={handleSignInButton}>Sign In</Button> */}

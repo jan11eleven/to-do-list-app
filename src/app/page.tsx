@@ -93,10 +93,12 @@ export default function Home() {
       ) : (
         <div className="flex flex-col justify-center items-center px-6 h-[calc(100vh-64px)] w-screen">
           <p>
-            <span className="text-7xl">Welcome to</span> <br />
+            <span className="text-2xl md:text-7xl">Welcome to</span> <br />
           </p>
-          <p className="mt-10">
-            <span className="text-8xl font-bold">Todo List App</span>
+          <p className="lg:mt-10">
+            <span className="text-3xl md:text-8xl font-bold">
+              Todo List App
+            </span>
           </p>
         </div>
       )}
