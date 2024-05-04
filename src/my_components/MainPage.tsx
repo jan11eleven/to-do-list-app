@@ -36,9 +36,11 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Switch } from '@/components/ui/switch';
 import { format } from 'date-fns';
 import { useToast } from '@/components/ui/use-toast';
 import { addTodoSchema, editTodoSchema } from '@/app/utils/zodSchemas';
+import constants from '@/app/utils/contants.json';
 
 type Todo = {
   id: string;
@@ -62,6 +64,52 @@ export default function MainPage({ fullName }: { fullName: string }) {
   const editTodoForm = useForm<z.infer<typeof editTodoSchema>>({
     resolver: zodResolver(editTodoSchema),
   });
+
+  async function editStatusTodoOnChange(
+    values: z.infer<typeof editTodoSchema>
+  ) {
+    const parseResult = editTodoSchema.safeParse(values);
+
+    if (!parseResult.success) {
+      toast({
+        title: 'Invalid Input!',
+        description: `Please fix the error.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const callUpdateTodo = async () => {
+      try {
+        const rawResponse = await fetch(`todos/api?email=${values.userId}`, {
+          method: 'PUT',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(values),
+        });
+
+        if (!rawResponse.ok) {
+          throw new Error('Error in editing Todos API');
+        }
+
+        const updatedTodo = await rawResponse.json();
+
+        fetchAllTodos();
+
+        toast({
+          title: 'Todo have successfully updated!',
+          description: `Your todo status - ${updatedTodo.name}: ${updatedTodo.status}`,
+          variant: 'success',
+        });
+      } catch (error: any) {
+        throw new Error(error);
+      }
+    };
+
+    await callUpdateTodo();
+  }
 
   async function editTodoOnSubmit(values: z.infer<typeof editTodoSchema>) {
     const parseResult = editTodoSchema.safeParse(values);
@@ -227,7 +275,7 @@ export default function MainPage({ fullName }: { fullName: string }) {
 
   return (
     <main className="px-6">
-      <p className="mb-10 font-semibold">Welcome, {fullName}</p>
+      {/* <p className="mb-10 font-semibold">Welcome, {fullName}</p> */}
       {/* Todo Add Modal */}
       <div className="mb-10">
         <Form {...addTodoForm}>
@@ -323,11 +371,12 @@ export default function MainPage({ fullName }: { fullName: string }) {
           <TableCaption>A list of your todos.</TableCaption>
           <TableHeader>
             <TableRow>
-              <TableHead className="">Name</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Date Created</TableHead>
-              <TableHead className="text-right">Action</TableHead>
+              <TableHead className="w-3/12">Name</TableHead>
+              <TableHead className="w-3/12">Description</TableHead>
+              <TableHead className="w-2/12">Status</TableHead>
+              <TableHead className="w-2/12">Date Created</TableHead>
+              <TableHead className="w-1/12">Mark as Done</TableHead>
+              <TableHead className="w-1/12">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -338,6 +387,18 @@ export default function MainPage({ fullName }: { fullName: string }) {
                 <TableCell>{todo.status}</TableCell>
                 <TableCell>
                   {format(todo.createdAt, 'MMM dd, yyyy - p')}
+                </TableCell>
+                <TableCell>
+                  <Switch
+                    checked={todo.status === constants['TODO_STATUS_DONE']}
+                    onCheckedChange={async () => {
+                      todo.status =
+                        todo.status === constants['TODO_STATUS_DONE']
+                          ? constants['TODO_STATUS_ONGOING']
+                          : constants['TODO_STATUS_DONE'];
+                      editStatusTodoOnChange(todo);
+                    }}
+                  />
                 </TableCell>
                 <TableCell className="text-right flex justify-end">
                   {/* Start Edit Dialog */}

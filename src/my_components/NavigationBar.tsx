@@ -23,9 +23,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AtSign, Github } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function NavigationBar() {
   const { data: session } = useSession();
+
+  const name = session?.user?.name;
 
   const handleSignInButton = async () => {
     await signIn();
@@ -43,16 +46,19 @@ export default function NavigationBar() {
           <li className="">
             <DropdownMenu>
               <DropdownMenuTrigger>
-                <Avatar>
-                  <AvatarImage
-                    src={
-                      session?.user?.image
-                        ? session?.user?.image
-                        : 'https://github.com/shadcn.png'
-                    }
-                  />
-                  <AvatarFallback>CN</AvatarFallback>
-                </Avatar>
+                <div className="flex items-center">
+                  <p className={cn('mr-4', 'hidden', 'md:block')}>{name}</p>
+                  <Avatar>
+                    <AvatarImage
+                      src={
+                        session?.user?.image
+                          ? session?.user?.image
+                          : 'https://github.com/shadcn.png'
+                      }
+                    />
+                    <AvatarFallback>CN</AvatarFallback>
+                  </Avatar>
+                </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>

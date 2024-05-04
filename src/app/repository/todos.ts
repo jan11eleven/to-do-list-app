@@ -1,5 +1,6 @@
 import prisma from '../db/prismaClient';
 import TodoType from '../types/TodoType';
+import constant from '@/app/utils/contants.json';
 
 enum TaskStatuses {
   Ongoing,
@@ -28,7 +29,7 @@ export async function createTodoRepo(
       data: {
         name: todo.name,
         description: todo.description,
-        status: 'Ongoing',
+        status: constant['TODO_STATUS_ONGOING'],
         userId: email,
       },
     });
