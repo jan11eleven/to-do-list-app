@@ -4,6 +4,7 @@ import './globals.css';
 import NavigationBar from '@/my_components/NavigationBar';
 import AuthProvider from './authProvider/AuthProvider';
 import { Toaster } from '@/components/ui/toaster';
+import { ThemeProvider } from '@/my_components/ThemeProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -21,8 +22,15 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <AuthProvider>
-          <NavigationBar />
-          <main>{children}</main>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <NavigationBar />
+            {children}
+          </ThemeProvider>
         </AuthProvider>
 
         <Toaster />

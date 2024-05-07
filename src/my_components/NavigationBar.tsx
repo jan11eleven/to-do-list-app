@@ -24,6 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AtSign, Github } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ModeToggle } from './ModeToggle';
 
 export default function NavigationBar() {
   const { data: session } = useSession();
@@ -39,7 +40,7 @@ export default function NavigationBar() {
   };
 
   return (
-    <main className="w-screen flex justify-between items-center px-6 h-16 bg-slate-100">
+    <main className="w-screen flex justify-between items-center px-6 h-16">
       <h1 className="font-bold">To-Do List</h1>
       <ul className="flex">
         {session ? (
@@ -111,6 +112,9 @@ export default function NavigationBar() {
             </Dialog>
           </li>
         )}
+        <li className="ml-4">
+          <ModeToggle />
+        </li>
       </ul>
     </main>
   );
