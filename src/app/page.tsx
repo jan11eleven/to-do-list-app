@@ -1,10 +1,11 @@
-'use client';
+"use client";
 
-import MainPage from '@/my_components/MainPage';
-import { useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
-import debounce from './utils/debounce';
-import errorMessages from './utils/errorMessages.json';
+import MainPage from "@/my_components/MainPage";
+import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
+import debounce from "./utils/debounce";
+import errorMessages from "./utils/errorMessages.json";
+import { Loader2 } from "lucide-react";
 
 export default function Home() {
   const { data: session } = useSession();
@@ -30,13 +31,13 @@ export default function Home() {
         );
 
         if (!rawResponse.ok) {
-          throw new Error('Encountered an error');
+          throw new Error("Encountered an error");
         }
 
         const userData = await rawResponse.json();
 
         // create user if user is not logged in
-        if (userData.message == errorMessages['user.no_user_found']) {
+        if (userData.message == errorMessages["user.no_user_found"]) {
           const payload = {
             name: session?.user?.name,
             email: session?.user?.email,
@@ -46,10 +47,10 @@ export default function Home() {
           if (!session || !session?.user) return;
 
           const rawResponse = await fetch(`user/api`, {
-            method: 'POST',
+            method: "POST",
             headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json',
+              Accept: "application/json",
+              "Content-Type": "application/json",
             },
             body: JSON.stringify(payload),
           });
@@ -81,14 +82,18 @@ export default function Home() {
   }, [session]);
 
   if (isLoading) {
-    return <div>Validating session...</div>;
+    return;
+    <div className="flex justify-center w-screen">
+      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+      Please wait
+    </div>;
   }
 
   return (
     <main>
       {session ? (
         <div className="mt-8">
-          <MainPage fullName={session?.user?.name || ''} />
+          <MainPage fullName={session?.user?.name || ""} />
         </div>
       ) : (
         <div className="flex flex-col justify-center items-center px-6 h-[calc(100vh-64px)] w-screen">
