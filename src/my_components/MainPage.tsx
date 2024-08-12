@@ -276,15 +276,6 @@ export default function MainPage({ fullName }: { fullName: string }) {
     fetchAllTodos();
   }, []);
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center w-screen">
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        Getting all your todos...
-      </div>
-    );
-  }
-
   return (
     <main className="px-6">
       {/* Todo Add Modal */}
