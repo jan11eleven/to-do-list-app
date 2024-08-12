@@ -234,15 +234,6 @@ export default function MainPage({ fullName }: { fullName: string }) {
     setIsLoading(false);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center w-screen">
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        Getting all your todos...
-      </div>
-    );
-  }
-
   // delete todo handler
   async function handleDeleteTodo(id: string) {
     const callDeleteTodo = async () => {
@@ -284,6 +275,15 @@ export default function MainPage({ fullName }: { fullName: string }) {
   useEffect(() => {
     fetchAllTodos();
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center w-screen">
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        Getting all your todos...
+      </div>
+    );
+  }
 
   return (
     <main className="px-6">
