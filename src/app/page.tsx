@@ -85,7 +85,7 @@ export default function Home() {
     return (
       <div className="flex justify-center w-screen">
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        Please wait
+        Please wait...
       </div>
     );
   }

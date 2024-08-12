@@ -1,5 +1,5 @@
-import { useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -8,8 +8,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -19,14 +19,14 @@ import {
   DialogTrigger,
   DialogFooter,
   DialogClose,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Loader2, ClipboardPlus } from 'lucide-react';
-import { Textarea } from '@/components/ui/textarea';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2, ClipboardPlus } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 import {
   Form,
   FormControl,
@@ -35,12 +35,12 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Switch } from '@/components/ui/switch';
-import { format } from 'date-fns';
-import { useToast } from '@/components/ui/use-toast';
-import { addTodoSchema, editTodoSchema } from '@/app/utils/zodSchemas';
-import constants from '@/app/utils/contants.json';
+} from "@/components/ui/form";
+import { Switch } from "@/components/ui/switch";
+import { format } from "date-fns";
+import { useToast } from "@/components/ui/use-toast";
+import { addTodoSchema, editTodoSchema } from "@/app/utils/zodSchemas";
+import constants from "@/app/utils/contants.json";
 
 type Todo = {
   id: string;
@@ -59,6 +59,7 @@ export default function MainPage({ fullName }: { fullName: string }) {
   const { toast } = useToast();
   const [isAddTodoLoading, setIsAddTodoLoading] = useState(false);
   const [deleteTodoData, setDeleteTodoData] = useState<Todo>();
+  const [isLoading, setIsLoading] = useState(false);
 
   // edit form
   const editTodoForm = useForm<z.infer<typeof editTodoSchema>>({
@@ -72,9 +73,9 @@ export default function MainPage({ fullName }: { fullName: string }) {
 
     if (!parseResult.success) {
       toast({
-        title: 'Invalid Input!',
+        title: "Invalid Input!",
         description: `Please fix the error.`,
-        variant: 'destructive',
+        variant: "destructive",
       });
       return;
     }
@@ -82,16 +83,16 @@ export default function MainPage({ fullName }: { fullName: string }) {
     const callUpdateTodo = async () => {
       try {
         const rawResponse = await fetch(`todos/api?email=${values.userId}`, {
-          method: 'PUT',
+          method: "PUT",
           headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
+            Accept: "application/json",
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(values),
         });
 
         if (!rawResponse.ok) {
-          throw new Error('Error in editing Todos API');
+          throw new Error("Error in editing Todos API");
         }
 
         const updatedTodo = await rawResponse.json();
@@ -99,9 +100,9 @@ export default function MainPage({ fullName }: { fullName: string }) {
         fetchAllTodos();
 
         toast({
-          title: 'Todo have successfully updated!',
+          title: "Todo have successfully updated!",
           description: `Your todo status - ${updatedTodo.name}: ${updatedTodo.status}`,
-          variant: 'success',
+          variant: "success",
         });
       } catch (error: any) {
         throw new Error(error);
@@ -116,9 +117,9 @@ export default function MainPage({ fullName }: { fullName: string }) {
 
     if (!parseResult.success) {
       toast({
-        title: 'Invalid Input!',
+        title: "Invalid Input!",
         description: `Please fix the error.`,
-        variant: 'destructive',
+        variant: "destructive",
       });
       return;
     }
@@ -126,16 +127,16 @@ export default function MainPage({ fullName }: { fullName: string }) {
     const callUpdateTodo = async () => {
       try {
         const rawResponse = await fetch(`todos/api?email=${values.userId}`, {
-          method: 'PUT',
+          method: "PUT",
           headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
+            Accept: "application/json",
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(values),
         });
 
         if (!rawResponse.ok) {
-          throw new Error('Error in editing Todos API');
+          throw new Error("Error in editing Todos API");
         }
 
         const updatedTodo = await rawResponse.json();
@@ -143,9 +144,9 @@ export default function MainPage({ fullName }: { fullName: string }) {
         fetchAllTodos();
 
         toast({
-          title: 'Todo have successfully updated!',
+          title: "Todo have successfully updated!",
           description: `You have new todo - ${updatedTodo.name}`,
-          variant: 'success',
+          variant: "success",
         });
       } catch (error: any) {
         throw new Error(error);
@@ -159,8 +160,8 @@ export default function MainPage({ fullName }: { fullName: string }) {
   const addTodoForm = useForm<z.infer<typeof addTodoSchema>>({
     resolver: zodResolver(addTodoSchema),
     defaultValues: {
-      name: '',
-      description: '',
+      name: "",
+      description: "",
     },
   });
 
@@ -173,9 +174,9 @@ export default function MainPage({ fullName }: { fullName: string }) {
     setIsAddTodoLoading(true);
     if (!parseResult.success) {
       toast({
-        title: 'Invalid Input!',
+        title: "Invalid Input!",
         description: `Please fix the error.`,
-        variant: 'destructive',
+        variant: "destructive",
       });
       return;
     }
@@ -185,17 +186,17 @@ export default function MainPage({ fullName }: { fullName: string }) {
         const rawResponse = await fetch(
           `todos/api?email=${session?.user?.email}`,
           {
-            method: 'POST',
+            method: "POST",
             headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json',
+              Accept: "application/json",
+              "Content-Type": "application/json",
             },
             body: JSON.stringify(values),
           }
         );
 
         if (!rawResponse.ok) {
-          throw new Error('Error in fetching Todos API');
+          throw new Error("Error in fetching Todos API");
         }
 
         const createdTodo = await rawResponse.json();
@@ -203,9 +204,9 @@ export default function MainPage({ fullName }: { fullName: string }) {
         fetchAllTodos();
 
         toast({
-          title: 'Successfully added new Todo!',
+          title: "Successfully added new Todo!",
           description: `You have new todo - ${createdTodo.name}`,
-          variant: 'success',
+          variant: "success",
         });
 
         setIsAddTodoLoading(false);
@@ -220,16 +221,27 @@ export default function MainPage({ fullName }: { fullName: string }) {
 
   // function for getting all todos
   const fetchAllTodos = async () => {
+    setIsLoading(true);
     const rawResponse = await fetch(`todos/api?email=${session?.user?.email}`);
 
     if (!rawResponse.ok) {
-      throw new Error('Error in fetching Todos API');
+      throw new Error("Error in fetching Todos API");
     }
 
     const todosData = await rawResponse.json();
 
     setTodos(todosData);
+    setIsLoading(false);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center w-screen">
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        Getting all your todos...
+      </div>
+    );
+  }
 
   // delete todo handler
   async function handleDeleteTodo(id: string) {
@@ -238,17 +250,17 @@ export default function MainPage({ fullName }: { fullName: string }) {
         const rawResponse = await fetch(
           `todos/api?email=${session?.user?.email}`,
           {
-            method: 'DELETE',
+            method: "DELETE",
             headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json',
+              Accept: "application/json",
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({ id: id }),
           }
         );
 
         if (!rawResponse.ok) {
-          throw new Error('Error in calling DELETE Todo API');
+          throw new Error("Error in calling DELETE Todo API");
         }
 
         const deletedTodo = await rawResponse.json();
@@ -256,9 +268,9 @@ export default function MainPage({ fullName }: { fullName: string }) {
         fetchAllTodos();
 
         toast({
-          title: 'Todo successfully deleted!',
+          title: "Todo successfully deleted!",
           description: `Deleted todo - ${deletedTodo.name}`,
-          variant: 'destructive',
+          variant: "destructive",
         });
       } catch (error: any) {
         throw new Error(error);
@@ -275,7 +287,6 @@ export default function MainPage({ fullName }: { fullName: string }) {
 
   return (
     <main className="px-6">
-      {/* <p className="mb-10 font-semibold">Welcome, {fullName}</p> */}
       {/* Todo Add Modal */}
       <div className="mb-10">
         <Form {...addTodoForm}>
@@ -284,8 +295,8 @@ export default function MainPage({ fullName }: { fullName: string }) {
             <DialogTrigger asChild>
               <Button
                 onClick={() => {
-                  addTodoForm.setValue('name', '');
-                  addTodoForm.setValue('description', '');
+                  addTodoForm.setValue("name", "");
+                  addTodoForm.setValue("description", "");
                 }}
                 disabled={todos.length < 10 ? false : true}
               >
@@ -334,7 +345,7 @@ export default function MainPage({ fullName }: { fullName: string }) {
                   )}
                 />
                 {todos.length < 10 ? (
-                  ''
+                  ""
                 ) : (
                   <DialogDescription className="italic">
                     Todo max limit reached. Delete some of your todo to create
@@ -386,16 +397,16 @@ export default function MainPage({ fullName }: { fullName: string }) {
                 <TableCell>{todo.description}</TableCell>
                 <TableCell>{todo.status}</TableCell>
                 <TableCell>
-                  {format(todo.createdAt, 'MMM dd, yyyy - p')}
+                  {format(todo.createdAt, "MMM dd, yyyy - p")}
                 </TableCell>
                 <TableCell>
                   <Switch
-                    checked={todo.status === constants['TODO_STATUS_DONE']}
+                    checked={todo.status === constants["TODO_STATUS_DONE"]}
                     onCheckedChange={async () => {
                       todo.status =
-                        todo.status === constants['TODO_STATUS_DONE']
-                          ? constants['TODO_STATUS_ONGOING']
-                          : constants['TODO_STATUS_DONE'];
+                        todo.status === constants["TODO_STATUS_DONE"]
+                          ? constants["TODO_STATUS_ONGOING"]
+                          : constants["TODO_STATUS_DONE"];
                       editStatusTodoOnChange(todo);
                     }}
                   />
@@ -450,18 +461,18 @@ export default function MainPage({ fullName }: { fullName: string }) {
                       <DialogTrigger asChild>
                         <Button
                           className="mr-2"
-                          variant={'secondary'}
+                          variant={"secondary"}
                           onClick={() => {
-                            editTodoForm.setValue('id', todo.id);
-                            editTodoForm.setValue('name', todo.name);
+                            editTodoForm.setValue("id", todo.id);
+                            editTodoForm.setValue("name", todo.name);
                             editTodoForm.setValue(
-                              'description',
+                              "description",
                               todo.description
                             );
-                            editTodoForm.setValue('status', todo.status);
-                            editTodoForm.setValue('createdAt', todo.createdAt);
-                            editTodoForm.setValue('userId', todo.userId);
-                            editTodoForm.setValue('updatedAt', todo.updatedAt);
+                            editTodoForm.setValue("status", todo.status);
+                            editTodoForm.setValue("createdAt", todo.createdAt);
+                            editTodoForm.setValue("userId", todo.userId);
+                            editTodoForm.setValue("updatedAt", todo.updatedAt);
                             console.log(editTodoForm.getValues());
                           }}
                         >
@@ -493,7 +504,7 @@ export default function MainPage({ fullName }: { fullName: string }) {
                             type="button"
                             variant="destructive"
                             onClick={() => {
-                              handleDeleteTodo(deleteTodoData?.id || '');
+                              handleDeleteTodo(deleteTodoData?.id || "");
                             }}
                           >
                             Delete
@@ -503,7 +514,7 @@ export default function MainPage({ fullName }: { fullName: string }) {
                     </DialogContent>
                     <DialogTrigger asChild>
                       <Button
-                        variant={'destructive'}
+                        variant={"destructive"}
                         onClick={() => {
                           setDeleteTodoData(todo);
                         }}
