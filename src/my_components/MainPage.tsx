@@ -374,162 +374,177 @@ export default function MainPage({ fullName }: { fullName: string }) {
         </Form>
       </div>
       {/* Todos Table */}
-      <div>
-        <h1 className="text-3xl font-bold">My Todo's</h1>
+      {isLoading ? (
+        <div className="flex justify-center w-screen">
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Getting all your todos...
+        </div>
+      ) : (
+        <div>
+          <h1 className="text-3xl font-bold">My Todo's</h1>
 
-        {/* starts table */}
-        <Table>
-          <TableCaption>A list of your todos.</TableCaption>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-3/12">Name</TableHead>
-              <TableHead className="w-3/12">Description</TableHead>
-              <TableHead className="w-2/12">Status</TableHead>
-              <TableHead className="w-2/12">Date Created</TableHead>
-              <TableHead className="w-1/12">Mark as Done</TableHead>
-              <TableHead className="w-1/12">Action</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {todos.map((todo) => (
-              <TableRow key={todo.id}>
-                <TableCell className="font-medium">{todo.name}</TableCell>
-                <TableCell>{todo.description}</TableCell>
-                <TableCell>{todo.status}</TableCell>
-                <TableCell>
-                  {format(todo.createdAt, "MMM dd, yyyy - p")}
-                </TableCell>
-                <TableCell>
-                  <Switch
-                    checked={todo.status === constants["TODO_STATUS_DONE"]}
-                    onCheckedChange={async () => {
-                      todo.status =
-                        todo.status === constants["TODO_STATUS_DONE"]
-                          ? constants["TODO_STATUS_ONGOING"]
-                          : constants["TODO_STATUS_DONE"];
-                      editStatusTodoOnChange(todo);
-                    }}
-                  />
-                </TableCell>
-                <TableCell className="text-right flex justify-end">
-                  {/* Start Edit Dialog */}
-                  <Form {...editTodoForm}>
+          {/* starts table */}
+          <Table>
+            <TableCaption>A list of your todos.</TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-3/12">Name</TableHead>
+                <TableHead className="w-3/12">Description</TableHead>
+                <TableHead className="w-2/12">Status</TableHead>
+                <TableHead className="w-2/12">Date Created</TableHead>
+                <TableHead className="w-1/12">Mark as Done</TableHead>
+                <TableHead className="w-1/12">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {todos.map((todo) => (
+                <TableRow key={todo.id}>
+                  <TableCell className="font-medium">{todo.name}</TableCell>
+                  <TableCell>{todo.description}</TableCell>
+                  <TableCell>{todo.status}</TableCell>
+                  <TableCell>
+                    {format(todo.createdAt, "MMM dd, yyyy - p")}
+                  </TableCell>
+                  <TableCell>
+                    <Switch
+                      checked={todo.status === constants["TODO_STATUS_DONE"]}
+                      onCheckedChange={async () => {
+                        todo.status =
+                          todo.status === constants["TODO_STATUS_DONE"]
+                            ? constants["TODO_STATUS_ONGOING"]
+                            : constants["TODO_STATUS_DONE"];
+                        editStatusTodoOnChange(todo);
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell className="text-right flex justify-end">
+                    {/* Start Edit Dialog */}
+                    <Form {...editTodoForm}>
+                      <Dialog>
+                        <DialogContent className="sm:max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>Edit Todo</DialogTitle>
+                          </DialogHeader>
+                          <form
+                            onSubmit={editTodoForm.handleSubmit(
+                              editTodoOnSubmit
+                            )}
+                          >
+                            <FormField
+                              control={editTodoForm.control}
+                              name="name"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Name</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={editTodoForm.control}
+                              name="description"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Description</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <DialogFooter className="sm:justify-between mt-10">
+                              <DialogClose asChild>
+                                <Button variant="secondary">Close</Button>
+                              </DialogClose>
+                              <DialogClose asChild>
+                                <Button type="submit">Save</Button>
+                              </DialogClose>
+                            </DialogFooter>
+                          </form>
+                        </DialogContent>
+                        <DialogTrigger asChild>
+                          <Button
+                            className="mr-2"
+                            variant={"secondary"}
+                            onClick={() => {
+                              editTodoForm.setValue("id", todo.id);
+                              editTodoForm.setValue("name", todo.name);
+                              editTodoForm.setValue(
+                                "description",
+                                todo.description
+                              );
+                              editTodoForm.setValue("status", todo.status);
+                              editTodoForm.setValue(
+                                "createdAt",
+                                todo.createdAt
+                              );
+                              editTodoForm.setValue("userId", todo.userId);
+                              editTodoForm.setValue(
+                                "updatedAt",
+                                todo.updatedAt
+                              );
+                              console.log(editTodoForm.getValues());
+                            }}
+                          >
+                            Edit
+                          </Button>
+                        </DialogTrigger>
+                      </Dialog>
+                    </Form>
+                    {/* End Edit Dialog */}
+                    {/* Start Delete Todo Dialog */}
                     <Dialog>
                       <DialogContent className="sm:max-w-md">
                         <DialogHeader>
-                          <DialogTitle>Edit Todo</DialogTitle>
+                          <DialogTitle>
+                            Delete Todo: <span>{deleteTodoData?.name}</span>
+                          </DialogTitle>
+                          <DialogDescription>
+                            Are you sure you want to delete?
+                          </DialogDescription>
                         </DialogHeader>
-                        <form
-                          onSubmit={editTodoForm.handleSubmit(editTodoOnSubmit)}
-                        >
-                          <FormField
-                            control={editTodoForm.control}
-                            name="name"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Name</FormLabel>
-                                <FormControl>
-                                  <Input {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={editTodoForm.control}
-                            name="description"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Description</FormLabel>
-                                <FormControl>
-                                  <Input {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <DialogFooter className="sm:justify-between mt-10">
-                            <DialogClose asChild>
-                              <Button variant="secondary">Close</Button>
-                            </DialogClose>
-                            <DialogClose asChild>
-                              <Button type="submit">Save</Button>
-                            </DialogClose>
-                          </DialogFooter>
-                        </form>
+                        <DialogFooter className="sm:justify-between">
+                          <DialogClose asChild>
+                            <Button type="button" variant="secondary">
+                              Close
+                            </Button>
+                          </DialogClose>
+                          <DialogClose asChild>
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              onClick={() => {
+                                handleDeleteTodo(deleteTodoData?.id || "");
+                              }}
+                            >
+                              Delete
+                            </Button>
+                          </DialogClose>
+                        </DialogFooter>
                       </DialogContent>
                       <DialogTrigger asChild>
                         <Button
-                          className="mr-2"
-                          variant={"secondary"}
+                          variant={"destructive"}
                           onClick={() => {
-                            editTodoForm.setValue("id", todo.id);
-                            editTodoForm.setValue("name", todo.name);
-                            editTodoForm.setValue(
-                              "description",
-                              todo.description
-                            );
-                            editTodoForm.setValue("status", todo.status);
-                            editTodoForm.setValue("createdAt", todo.createdAt);
-                            editTodoForm.setValue("userId", todo.userId);
-                            editTodoForm.setValue("updatedAt", todo.updatedAt);
-                            console.log(editTodoForm.getValues());
+                            setDeleteTodoData(todo);
                           }}
                         >
-                          Edit
+                          Delete
                         </Button>
                       </DialogTrigger>
                     </Dialog>
-                  </Form>
-                  {/* End Edit Dialog */}
-                  {/* Start Delete Todo Dialog */}
-                  <Dialog>
-                    <DialogContent className="sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>
-                          Delete Todo: <span>{deleteTodoData?.name}</span>
-                        </DialogTitle>
-                        <DialogDescription>
-                          Are you sure you want to delete?
-                        </DialogDescription>
-                      </DialogHeader>
-                      <DialogFooter className="sm:justify-between">
-                        <DialogClose asChild>
-                          <Button type="button" variant="secondary">
-                            Close
-                          </Button>
-                        </DialogClose>
-                        <DialogClose asChild>
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            onClick={() => {
-                              handleDeleteTodo(deleteTodoData?.id || "");
-                            }}
-                          >
-                            Delete
-                          </Button>
-                        </DialogClose>
-                      </DialogFooter>
-                    </DialogContent>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant={"destructive"}
-                        onClick={() => {
-                          setDeleteTodoData(todo);
-                        }}
-                      >
-                        Delete
-                      </Button>
-                    </DialogTrigger>
-                  </Dialog>
-                  {/* End Delete Todo Dialog */}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+                    {/* End Delete Todo Dialog */}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </main>
   );
 }
